@@ -41,12 +41,16 @@ int main( int argc, char** argv )
   return(0);
 }
 
+bool isValidPoint(Point p, const Mat & threshold_output) {
+    return p.x >= 0 && p.y >= 0 && p.x < threshold_output.cols && p.y < threshold_output.rows;
+}
+
 void transverse(Point p, const Mat & threshold_output, vector<Point> & interesting_points) {
     // p is the starting point
     // this function BFS from the point closest to the centroid
-
     const int WINDOW_SIZE = 2;
     static map<pair<int, int>, bool> visited;
+
     queue<Point> q;
     q.push(p);
 
@@ -66,7 +70,8 @@ void transverse(Point p, const Mat & threshold_output, vector<Point> & interesti
                 int x = p.x + i;
                 int y = p.y + j;
 
-                if (!visited[make_pair(x, y)] && 
+                if (isValidPoint(Point(x, y), threshold_output) && 
+                    !visited[make_pair(x, y)] && 
                     threshold_output.at<char>(Point(x, y)) == 0) {
 
                     q.push(Point(x, y));
@@ -90,25 +95,19 @@ void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat 
         s_x += candidate_points[i].x;
         s_y += candidate_points[i].y;
     }
+    long long varience = 0;
     s_x /= candidate_points.size();
     s_y /= candidate_points.size();
-
-    // select the point closesto the centroid
     Point centroid = Point(s_x, s_y);
-    Point p = Point(candidate_points[0].x, candidate_points[0].y);
-    for (int i = 1 ; i < candidate_points.size() ; i++) {
-        if (distSq(centroid, p) > distSq(centroid, candidate_points[i])) {
-            p = candidate_points[i];
-        }
-    }
-
-    cout << "Lenght of candidate_points" << endl;
-    cout << candidate_points.size() << endl;
-    cout << p << endl;
-    // start BFS from the closest point to centroid
 
     for (int i = 0 ; i < candidate_points.size() ; i++) {
-        if (isNotAnomaly(candidate_points[i], centroid, sd)) {
+        varience += distSq(candidate_points[i], centroid);
+    }
+    varience /= candidate_points.size();
+
+
+    for (int i = 0 ; i < candidate_points.size() ; i++) {
+        if (distSq(centroid, candidate_points[i]) < varience * 4) {
             transverse(candidate_points[i], threshold_output, interesting_points);
         }
     }    
