@@ -13,12 +13,12 @@
 using namespace cv;
 using namespace std;
 
-const unsigned MINIMUM_EDGE_COUNT = 1000;
+const unsigned MINIMUM_EDGE_COUNT = 500;
 inline int distSq(const Point a, const Point b);
 
 bool isValidPoint(Point p, const Mat & threshold_output);
 void transverse(Point p, const Mat & threshold_output, vector<Point> & interesting_points);
 void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat & threshold_output, vector<Point> & interesting_points);
-bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect);
+bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Mat & threshold_output);
 
 #endif

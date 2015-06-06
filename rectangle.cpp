@@ -67,15 +67,15 @@ void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat 
 
     for (int i = 0 ; i < candidate_points.size() ; i++) {
         if (distSq(centroid, candidate_points[i]) < varience * 4) {
-            transverse(candidate_points[i], threshold_output, interesting_points);
+            interesting_points.push_back(candidate_points[i]);
+            // transverse(candidate_points[i], threshold_output, interesting_points);
         }
     }    
 }
 
-bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect) {
-    Mat threshold_output;
+bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Mat & threshold_output) {
+    // Mat threshold_output;
     vector<cv::Point> interesting_points, candidate_points;
-    
     /// Detect edges using Threshold
     threshold(src_gray, threshold_output, thresh, 255, THRESH_BINARY);
 
@@ -89,7 +89,9 @@ bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect) {
 
     obtainInterestingPoints(candidate_points, threshold_output, interesting_points);
 
-    minRect = minAreaRect(Mat(interesting_points));
-
+    if (interesting_points.size()) {
+        minRect = minAreaRect(interesting_points);
+    }
+    cout << candidate_points.size() << endl;
     return candidate_points.size() > MINIMUM_EDGE_COUNT;
 }

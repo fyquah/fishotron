@@ -17,7 +17,7 @@ void thresh_callback(int, void* );
 /** @function main */
 int main( int argc, char** argv ) {
     /// Load source image and convert it to gray
-    src = imread( argv[1], 1 );
+    src = imread( "http://10.20.41.200:8080/shot.jpg", 1 );
     cv::resize(src, src, cv::Size(700, 500));
 
     /// Convert image to gray
@@ -35,10 +35,10 @@ int main( int argc, char** argv ) {
 
 void thresh_callback(int, void* ){
     RotatedRect minRect;
-    Mat drawing;
+    Mat drawing, threshold_output;
     Point2f rectPoints[4]; 
     
-    if(!obtainRectangle(src_gray, thresh, minRect)) {
+    if(!obtainRectangle(src_gray, thresh, minRect, threshold_output)) {
         cout << "Unable to obtain best rectangle!" << endl;
         return;
     } 
