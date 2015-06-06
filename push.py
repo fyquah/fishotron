@@ -35,8 +35,12 @@ headers = { "content-type": "application/json" }
 # Remove the file
 subprocess.call(["rm", sys.argv[1]])
 
+# Note : the password and username simply changes from time to time
+# The client password and username was hardcoded to simplify task, right way to 
+# do would be to make a proper HTTP request.
+
 # Connect and transfer data to Meteor
-mongo_url = 'mongodb://client-9dfb4dde:e62f03e2-90ae-3bcb-7ca9-6ecbf52519d9@production-db-c2.meteor.io:27017/fishotron_meteor_com'
+mongo_url = 'mongodb://client-903649ab:5a67abcb-0ff9-e131-58e3-130b03bd04cc@production-db-c2.meteor.io:27017/fishotron_meteor_com'
 client = MongoClient(mongo_url)
 db = client.fishotron_meteor_com
 db.fish.insert_one(payload)
