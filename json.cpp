@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include <math.h>
+#include <unistd.h>
 #include "rectangle.h"
 #include <chilitags/chilitags.hpp>
 
@@ -23,6 +24,12 @@ double dst(const Point2f & a, const Point2f & b);
 const int PIXEL_RATIO = 50;
 // #define DEBUG 1;
 
+string toString(int x) {
+    stringstream ss;
+    ss << x;
+    return ss.str();
+}
+
 int main(int argc, char* argv[])
 {
     assert(argc >= 2);
@@ -33,6 +40,7 @@ int main(int argc, char* argv[])
     string image_save_path = argv[1];
     RNG rng(12345);
     int thresh = 100;
+    bool isRecording = false;
     // The source of input images
     vector<double> v_length, v_width;
     cv::VideoCapture capture;
@@ -64,7 +72,7 @@ int main(int argc, char* argv[])
 
     cv::namedWindow("DisplayChilitags");
     // Main loop, exiting when 'q is pressed'
-    for (int fc = 0; 'q' != (char) cv::waitKey(1) && v_length.size() < 15; ++fc) {
+    for (; 'q' != (char) cv::waitKey(1) ; ) {
 #ifdef DEBUG
         cerr << "a" << endl;
 #endif
@@ -98,10 +106,13 @@ int main(int argc, char* argv[])
                 cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
                 line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], color , 1, 8);
             }  
-            double a = dst(rectPoints[0], rectPoints[1]);
-            double b = dst(rectPoints[1], rectPoints[2]);
-            v_length.push_back(max(a, b));
-            v_width.push_back(min(a, b));
+
+            if (isRecording) {
+                double a = dst(rectPoints[0], rectPoints[1]);
+                double b = dst(rectPoints[1], rectPoints[2]);
+                v_length.push_back(max(a, b));
+                v_width.push_back(min(a, b));
+            }
 
         }  else {
 #ifdef DEBUG
@@ -111,15 +122,39 @@ int main(int argc, char* argv[])
 
         // Finally...
         cv::imshow("DisplayChilitags", outputImage);
+
+        // handle break conditions
+        if (isRecording && v_length.size() >= 20) {
+            // do forking and break
+            cout << "Finish recording!" << endl;
+            pid_t pid = fork();
+            if (pid == 0) {
+                // children process
+                pair<double, double> p = compute_length_and_width(v_length, v_width);
+                image_save_path =  toString(rand() % 1000) + image_save_path;
+                imwrite(image_save_path.c_str(), inputImage);
+                execl("/usr/bin/python", "python", "push.py", image_save_path.c_str(), toString(p.first).c_str(), toString(p.second).c_str(), (char*) 0);
+                return 0;
+
+            } else if(pid >= 1) {
+                isRecording = false;
+                v_length.clear();
+                v_width.clear();
+            } else if (pid == -1) {
+                // error occued
+                // an error occured!
+            }
+
+        } else if(!isRecording && waitKey(1) == 13) {
+            cout << "Start recording!" << endl;
+            isRecording = true;
+            v_length.clear();
+            v_width.clear();
+        }
     }
 
     cv::destroyWindow("DisplayChilitags");
     capture.release();
-
-    pair<double, double> p = compute_length_and_width(v_length, v_width);
-    cout << get_rectangle_json(p.first, p.second) << endl;
-    imwrite(image_save_path.c_str(), inputImage);
-
     return 0;
 }
 

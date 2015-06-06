@@ -1,23 +1,20 @@
 #!/usr/bin/env python
-import os, json, subprocess, string, requests, tinys3, random
+import os, json, subprocess, string, requests, tinys3, random, sys
 
-dirname = os.path.dirname(os.path.realpath(__file__))
-executable = dirname + "/json"
 url = "http://localhost:3000/fish"
 
-# j = subprocess.check_output([ executable, "output.jpeg"])
-# s = string.split(j, "\n")[1]
-# obj = json.loads(s)
-
 obj = { 
-    "width": 1,
-    "length" : 2.0
+    "length" : float(sys.argv[2]),
+    "width": float(sys.argv[3])
 }
+
+print "length is " + str(float(sys.argv[2]))
+print "width is " + str(float(sys.argv[3]))
 
 conn = tinys3.Connection(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_KEY"], 
     tls=True, endpoint='s3-eu-west-1.amazonaws.com')
 file_name = str(random.random()) + "-pic.jpeg"
-f = open("build/output.jpeg", "rb")
+f = open(sys.argv[1], "rb")
 conn.upload(file_name, f, "fish-measurer")
 aws_file_name = "https://s3-eu-west-1.amazonaws.com/fish-measurer/" + file_name
 
@@ -27,9 +24,13 @@ payload = {
         "width": obj["width"],
         "length": obj["length"],
         "lat": 5.476795,
-        "lng": 100.247197
+        "lng": 100.247197,
+        "aws_image_url": aws_file_name
     }
 }
 headers = { "content-type": "application/json" }
 
 print requests.post(url= url, data=json.dumps(payload), headers=headers)
+
+# Remove the file
+system.call(["rm", sys.argv[1]])
