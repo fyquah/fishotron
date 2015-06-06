@@ -46,7 +46,7 @@ int scaleImage(Mat input, Mat &output) {
 	
 	if (tagCount==0) {
 		output = input.clone();
-		//cout << "FUCK IT ALL" << endl;
+		//cerr << "FUCK IT ALL" << endl;
 		return -1;
 	}
 		
@@ -67,7 +67,9 @@ int scaleImage(Mat input, Mat &output) {
 	while (numpts!=4) { //loop over each fiducial
 		if (exists[curFid]) {
 			for (int i = 0;i<4;i==1?i+=2:i++) {
-				cout << i;
+#ifdef DEBUG
+				cerr << i;
+#endif
 				//loop over the non-primary points [everything but 2]
 				src_p[numpts]=mats[curFid](i);
 				dst_p[numpts]=getPos(curFid,i);
@@ -79,15 +81,16 @@ int scaleImage(Mat input, Mat &output) {
 		}
 		curFid+=1;
 	}
-	cout << "Source:" << endl;
+#ifdef DEBUG
+	cerr << "Source:" << endl;
 	for (int i = 0; i<4; i++) {
-		cout << i << " -- " << src_p[i].x << " -- " << src_p[i].y << endl;
+		cerr << i << " -- " << src_p[i].x << " -- " << src_p[i].y << endl;
 	}
-	cout << "Destination:" << endl;
-
+	cerr << "Destination:" << endl;
 	for (int i = 0; i<4; i++) {
-		cout << i << " -- " << dst_p[i].x << " -- " << dst_p[i].y << endl;
+		cerr << i << " -- " << dst_p[i].x << " -- " << dst_p[i].y << endl;
 	}
+#endif
 
 
 	Mat trans = getPerspectiveTransform(src_p,dst_p);

@@ -86,7 +86,9 @@ bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Ma
     vector<cv::Point> interesting_points, candidate_points;
     /// Detect edges using Threshold
     threshold(src_gray, threshold_output, thresh, 255, THRESH_BINARY);
-    cout << "d" << endl;
+#ifdef DEBUG
+    cerr << "d" << endl;
+#endif
     for (int i = 0 ; i < threshold_output.rows ; i++) {
         for (int j = 0 ; j < threshold_output.cols ; j++) {
             if (threshold_output.at<char>(Point(j, i)) == 0) {
@@ -94,12 +96,16 @@ bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Ma
             }
         }
     }
-    cout << "e" << endl;
+#ifdef DEBUG
+    cerr << "e" << endl;
+#endif
     obtainInterestingPoints(candidate_points, threshold_output, interesting_points);
 
     if (interesting_points.size()) {
         minRect = minAreaRect(interesting_points);
     }
-    cout << candidate_points.size() << endl;
+#ifdef DEBUG
+    cerr << candidate_points.size() << endl;
+#endif
     return candidate_points.size() > MINIMUM_EDGE_COUNT;
 }

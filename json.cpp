@@ -21,6 +21,7 @@ string get_point_json(const Point2f & p);
 pair<double, double> compute_length_and_width(const vector<double> & v_length, const vector<double> & v_width);
 double dst(const Point2f & a, const Point2f & b);
 const int PIXEL_RATIO = 50;
+// #define DEBUG 1;
 
 int main(int argc, char* argv[])
 {
@@ -28,7 +29,7 @@ int main(int argc, char* argv[])
     // Simple parsing of the parameters related to the image acquisition
     int xRes = 1280;
     int yRes = 720;
-    int cameraIndex = 1;
+    int cameraIndex = 0;
     string image_save_path = argv[1];
     RNG rng(12345);
     int thresh = 100;
@@ -64,13 +65,17 @@ int main(int argc, char* argv[])
     cv::namedWindow("DisplayChilitags");
     // Main loop, exiting when 'q is pressed'
     for (int fc = 0; 'q' != (char) cv::waitKey(1) && v_length.size() < 15; ++fc) {
-        cout << "a" << endl;
+#ifdef DEBUG
+        cerr << "a" << endl;
+#endif
         capture.read(inputImage);
         cv::Mat outputImage;
         scaleImage(inputImage,outputImage);
         int64 startTime = cv::getTickCount();
 
-        cout << "B" << endl;
+#ifdef DEBUG
+        cerr << "B" << endl;
+#endif
         // Do border detection ...
 
         cv::cvtColor(outputImage, src_gray, CV_BGR2GRAY);
@@ -78,14 +83,17 @@ int main(int argc, char* argv[])
         Point2f rectPoints[4]; 
         Mat t_out;
 
-        cout << "c" << endl;
+#ifdef DEBUG
+        cerr << "c" << endl;
+#endif
         if(obtainRectangle(src_gray, thresh, minRect, t_out)) {
             minRect.points(rectPoints);
-            cout << rectPoints[0] << endl;
-            cout << rectPoints[1] << endl;
-            cout << rectPoints[2] << endl;
-            cout << rectPoints[3] << endl;
-            
+#ifdef DEBUG
+            cerr << rectPoints[0] << endl;
+            cerr << rectPoints[1] << endl;
+            cerr << rectPoints[2] << endl;
+            cerr << rectPoints[3] << endl;
+#endif            
             for (int i = 0 ; i < 4 ; i++) {
                 cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
                 line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], color , 1, 8);
@@ -96,7 +104,9 @@ int main(int argc, char* argv[])
             v_width.push_back(min(a, b));
 
         }  else {
-            cout << "Unable to obtained best rectangle!" << endl;
+#ifdef DEBUG
+            cerr << "Unable to obtained best rectangle!" << endl;
+#endif
         }
 
         // Finally...

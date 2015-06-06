@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     // Simple parsing of the parameters related to the image acquisition
     int xRes = 1280;
     int yRes = 720;
-    int cameraIndex = 1;
+    int cameraIndex = 0;
     if (argc > 2) {
         xRes = std::atoi(argv[1]);
         yRes = std::atoi(argv[2]);
