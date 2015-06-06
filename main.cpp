@@ -1,6 +1,9 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
+#include <queue>
+#include <map>
+#include <utility>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,7 +33,7 @@ int main( int argc, char** argv )
   namedWindow( source_window, CV_WINDOW_AUTOSIZE );
 
 
-  imshow(source_window, src_gray);
+  // imshow(source_window, src_gray);
   createTrackbar( " Threshold:", "Source", &thresh, max_thresh, thresh_callback );
   thresh_callback( 0, 0 );
   cout << "Done" << endl;
@@ -38,21 +41,95 @@ int main( int argc, char** argv )
   return(0);
 }
 
-/** @function thresh_callback */
+void transverse(Point p, const Mat & threshold_output, vector<Point> & interesting_points) {
+    // p is the starting point
+    // this function BFS from the point closest to the centroid
+
+    const int WINDOW_SIZE = 2;
+    static map<pair<int, int>, bool> visited;
+    queue<Point> q;
+    q.push(p);
+
+    while (!q.empty()) {
+
+        Point p = q.front();
+        q.pop();
+
+        if(visited[make_pair(p.x, p.y)]) {
+            continue;
+        }
+
+        visited[make_pair(p.x, p.y)] = true;
+
+        for (int i = -WINDOW_SIZE/2 ; i <= WINDOW_SIZE/2 ; i++) {
+            for (int j = -WINDOW_SIZE/2; j <= WINDOW_SIZE/2 ; j++) {
+                int x = p.x + i;
+                int y = p.y + j;
+
+                if (!visited[make_pair(x, y)] && 
+                    threshold_output.at<char>(Point(x, y)) == 0) {
+
+                    q.push(Point(x, y));
+                    interesting_points.push_back(Point(x, y));
+                }
+            }
+        }
+    }
+}
+
+inline int distSq(const Point a, const Point b) {
+    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+
+void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat & threshold_output, vector<Point> & interesting_points) {
+
+    // compute the "centroid"
+    int s_x = 0;
+    int s_y = 0;
+    for (int i = 0 ; i < candidate_points.size() ; i++) {
+        s_x += candidate_points[i].x;
+        s_y += candidate_points[i].y;
+    }
+    s_x /= candidate_points.size();
+    s_y /= candidate_points.size();
+
+    // select the point closesto the centroid
+    Point centroid = Point(s_x, s_y);
+    Point p = Point(candidate_points[0].x, candidate_points[0].y);
+    for (int i = 1 ; i < candidate_points.size() ; i++) {
+        if (distSq(centroid, p) > distSq(centroid, candidate_points[i])) {
+            p = candidate_points[i];
+        }
+    }
+
+    cout << "Lenght of candidate_points" << endl;
+    cout << candidate_points.size() << endl;
+    cout << p << endl;
+    // start BFS from the closest point to centroid
+
+    for (int i = 0 ; i < candidate_points.size() ; i++) {
+        if (isNotAnomaly(candidate_points[i], centroid, sd)) {
+            transverse(candidate_points[i], threshold_output, interesting_points);
+        }
+    }    
+}
+
 void thresh_callback(int, void* ){
     Mat threshold_output;
-    vector<cv::Point> interesting_points;
+    vector<cv::Point> interesting_points, candidate_points;
  
     /// Detect edges using Threshold
     threshold(src_gray, threshold_output, thresh, 255, THRESH_BINARY );
 
     for (int i = 0 ; i < threshold_output.rows ; i++) {
         for (int j = 0 ; j < threshold_output.cols ; j++) {
-            if (threshold_output.at<char>(i, j) == 0) {
-                interesting_points.push_back(cv::Point(i, j));
+            if (threshold_output.at<char>(Point(j, i)) == 0) {
+                candidate_points.push_back(cv::Point(j, i));
             }
         }
     }
+
+    obtainInterestingPoints(candidate_points, threshold_output, interesting_points);
 
     cout << "Lenght of arr" << endl;
     cout << interesting_points.size() << endl;
@@ -61,9 +138,7 @@ void thresh_callback(int, void* ){
     cout << minRect.angle << endl;
     Point2f rectPoints[4]; 
     minRect.points(rectPoints);
-    for (int i = 0 ; i < 4 ; i++) {
-        swap(rectPoints[i].x, rectPoints[i].y);
-    }
+
 
     cvtColor(src_gray, drawing, CV_GRAY2BGR);    
 
@@ -72,17 +147,11 @@ void thresh_callback(int, void* ){
         line(drawing, rectPoints[i], rectPoints[(i+1) % 4], color , 1, 8);
     }
 
-    /// Show in a window
-    namedWindow("Threshold output", CV_WINDOW_AUTOSIZE);
-    imshow("Threshold output", threshold_output);
-
     // Detected rectangle
     namedWindow("Detected rectangle", CV_WINDOW_AUTOSIZE );
     imshow("Detected rectangle", drawing );
 
-    // on originak
-    namedWindow("bla", CV_WINDOW_AUTOSIZE );
-    imshow("bla", src_gray);
-
+    namedWindow("bla", CV_WINDOW_AUTOSIZE);
+    imshow("bla", threshold_output);
 
 }
