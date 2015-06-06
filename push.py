@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os, json, subprocess, string, requests, tinys3, random, sys
-
-url = "http://localhost:3000/fish"
+from pymongo import MongoClient
 
 obj = { 
     "length" : float(sys.argv[2]),
@@ -20,17 +19,24 @@ aws_file_name = "https://s3-eu-west-1.amazonaws.com/fish-measurer/" + file_name
 
 # Send the http request
 payload = {
-    "fish": {
-        "width": obj["width"],
-        "length": obj["length"],
+    "width": obj["width"],
+    "height": obj["length"],
+    "location": {
         "lat": 5.476795,
-        "lng": 100.247197,
-        "aws_image_url": aws_file_name
-    }
+        "lng": 100.247197
+    },
+    "image": aws_file_name,
+    "description" : "This was a easy catch!",
+    "name": "The Awesome Fish",
+    "species": "Tuna"
 }
 headers = { "content-type": "application/json" }
 
-print requests.post(url= url, data=json.dumps(payload), headers=headers)
-
 # Remove the file
 subprocess.call(["rm", sys.argv[1]])
+
+# Connect and transfer data to Meteor
+mongo_url = 'mongodb://client-9dfb4dde:e62f03e2-90ae-3bcb-7ca9-6ecbf52519d9@production-db-c2.meteor.io:27017/fishotron_meteor_com'
+client = MongoClient(mongo_url)
+db = client.fishotron_meteor_com
+db.fish.insert_one(payload)
