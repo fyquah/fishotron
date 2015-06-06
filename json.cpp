@@ -14,9 +14,10 @@ int main(int argc, char * argv[]) {
     src = imread( argv[1], 1 );
     cv::resize(src, src, cv::Size(700, 500));
     cvtColor(src, src_gray, CV_BGR2GRAY);
-    
+
     // output the json format;
-    if(obtainRectangle(src_gray, 100, minRect)) {
+    Mat t_out;
+    if(obtainRectangle(src_gray, 100, minRect, t_out)) {
         cout << get_rectangle_json(minRect) << endl;
     } else {
         cout << "{\"error\": \"failed to get best rect\"}" << endl;
