@@ -47,6 +47,11 @@ void transverse(Point p, const Mat & threshold_output, vector<Point> & interesti
 
 void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat & threshold_output, vector<Point> & interesting_points) {
 
+    if(!candidate_points.size()) {
+        return;
+        // premature return on empty array input
+    }
+
     // compute the "centroid"
     int s_x = 0;
     int s_y = 0;
@@ -55,6 +60,7 @@ void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat 
         s_y += candidate_points[i].y;
     }
     long long varience = 0;
+
     s_x /= candidate_points.size();
     s_y /= candidate_points.size();
     Point centroid = Point(s_x, s_y);
@@ -62,8 +68,10 @@ void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat 
     for (int i = 0 ; i < candidate_points.size() ; i++) {
         varience += distSq(candidate_points[i], centroid);
     }
-    varience /= candidate_points.size();
 
+    if(candidate_points.size()) {
+        varience /= candidate_points.size();
+    }
 
     for (int i = 0 ; i < candidate_points.size() ; i++) {
         if (distSq(centroid, candidate_points[i]) < varience * 4) {
@@ -78,7 +86,7 @@ bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Ma
     vector<cv::Point> interesting_points, candidate_points;
     /// Detect edges using Threshold
     threshold(src_gray, threshold_output, thresh, 255, THRESH_BINARY);
-
+    cout << "d" << endl;
     for (int i = 0 ; i < threshold_output.rows ; i++) {
         for (int j = 0 ; j < threshold_output.cols ; j++) {
             if (threshold_output.at<char>(Point(j, i)) == 0) {
@@ -86,7 +94,7 @@ bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Ma
             }
         }
     }
-
+    cout << "e" << endl;
     obtainInterestingPoints(candidate_points, threshold_output, interesting_points);
 
     if (interesting_points.size()) {

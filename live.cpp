@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
     // The source of input images
 
     cv::VideoCapture capture;
-    capture.open("http://c-cam.uchicago.edu/mjpg/video.mjpg");
-    if (!capture.isOpened())
-    {
+    // capture.open(0);
+    capture.open("http://10.20.41.200:8080/video?x.mjpeg");
+    if (!capture.isOpened()) {
         std::cerr << "Unable to initialise video capture." << std::endl;
         return 1;
     }
@@ -61,85 +61,20 @@ int main(int argc, char* argv[])
 
     cv::namedWindow("DisplayChilitags");
     // Main loop, exiting when 'q is pressed'
-    for (; 'q' != (char) cv::waitKey(1); ) {
+    for (int fc = 0; 'q' != (char) cv::waitKey(1); ++fc) {
         cout << "a" << endl;
-        // Capture a new image.
         capture.read(inputImage);
         cv::Mat outputImage = inputImage.clone();
+        int64 startTime = cv::getTickCount();
 
-//         // Start measuring the time needed for the detection
-//         int64 startTime = cv::getTickCount();
-
-//         // Detect tags on the current image (and time the detection);
-//         // The resulting map associates tag ids (between 0 and 1023)
-//         // to four 2D points corresponding to the corners positions
-//         // in the picture.
-//         chilitags::TagCornerMap tags = chilitags.find(inputImage);
-
-//         // Measure the processing time needed for the detection
-//         int64 endTime = cv::getTickCount();
-//         float processingTime = 1000.0f*((float) endTime - startTime)/cv::getTickFrequency();
-
-
-//         // Now we start using the result of the detection.
-
-//         // First, we set up some constants related to the information overlaid
-//         // on the captured image
-//         const static cv::Scalar COLOR(255, 0, 255);
-//         // OpenCv can draw with sub-pixel precision with fixed point coordinates
-//         static const int SHIFT = 16;
-//         static const float PRECISION = 1<<SHIFT;
-
-//         // We dont want to draw directly on the input image, so we clone it
-        
-
-//         for (const std::pair<int, chilitags::Quad> & tag : tags) {
-
-//             int id = tag.first;
-//             // We wrap the corner matrix into a datastructure that allows an
-//             // easy access to the coordinates
-//             const cv::Mat_<cv::Point2f> corners(tag.second);
-
-//             // We start by drawing the borders of the tag
-//             for (size_t i = 0; i < 4; ++i) {
-//                 cv::line(
-//                     outputImage,
-//                     PRECISION*corners(i),
-//                     PRECISION*corners((i+1)%4),
-// #ifdef OPENCV3
-//                     COLOR, 1, cv::LINE_AA, SHIFT);
-// #else
-//                     COLOR, 1, CV_AA, SHIFT);
-// #endif
-//             }
-
-//             // Other points can be computed from the four corners of the Quad.
-//             // Chilitags are oriented. It means that the points 0,1,2,3 of
-//             // the Quad coordinates are consistently the top-left, top-right,
-//             // bottom-right and bottom-left corners.
-//             // (i.e. clockwise, starting from top-left)
-//             // Using this, we can compute (an approximation of) the center of
-//             // tag.
-//             cv::Point2f center = 0.5f*(corners(0) + corners(2));
-//             cv::putText(outputImage, cv::format("%d", id), center,
-//                         cv::FONT_HERSHEY_SIMPLEX, 0.5f, COLOR);
-//         }
-
-//         // Some stats on the current frame (resolution and processing time)
-//         cv::putText(outputImage,
-//                     cv::format("%dx%d %4.0f ms (press q to quit)",
-//                                outputImage.cols, outputImage.rows,
-//                                processingTime),
-//                     cv::Point(32,32),
-//                     cv::FONT_HERSHEY_SIMPLEX, 0.5f, COLOR);
-
+        cout << "B" << endl;
         // Do border detection ...
         cv::cvtColor(inputImage, src_gray, CV_BGR2GRAY);
         RotatedRect minRect;
         Point2f rectPoints[4]; 
-        cout << "b" << endl;
         Mat t_out;
 
+        cout << "c" << endl;
         if(obtainRectangle(src_gray, thresh, minRect, t_out)) {
             minRect.points(rectPoints);
             cout << rectPoints[0] << endl;
