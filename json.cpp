@@ -126,9 +126,11 @@ int main(int argc, char* argv[])
                 line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], col , 2, 8);
             }
             cv::putText(outputImage, cv::format("%.01f", len), Point2f(50,50),
-                        cv::FONT_HERSHEY_SIMPLEX, 2.0f, col);
+                        cv::FONT_HERSHEY_SIMPLEX, 2.0f, Scalar(0, 0, 0));
 
             if (isRecording) {
+                circle(outputImage, Point2f(1000, 70), 35, Scalar(0, 0, 255), 25);   
+
                 double a = dst(rectPoints[0], rectPoints[1]);
                 double b = dst(rectPoints[1], rectPoints[2]);
                 v_length.push_back(max(a, b));
