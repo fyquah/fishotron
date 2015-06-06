@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project( DisplayImage )
 find_package( OpenCV REQUIRED )
+add_executable( json json.cpp rectangle.cpp )
+target_link_libraries( json ${OpenCV_LIBS} )
 add_executable( live live.cpp rectangle.cpp )
 target_link_libraries( live ${OpenCV_LIBS} )
 target_link_libraries( live chilitags_static)
