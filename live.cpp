@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+#include "FiducialMap.h"
 
 int main(int argc, char* argv[])
 {
@@ -33,8 +34,8 @@ int main(int argc, char* argv[])
     // The source of input images
 
     cv::VideoCapture capture;
-    // capture.open(0);
-    capture.open("http://10.20.41.200:8080/video?x.mjpeg");
+    capture.open(0);
+    //capture.open("http://10.20.41.200:8080/video?x.mjpeg");
     if (!capture.isOpened()) {
         std::cerr << "Unable to initialise video capture." << std::endl;
         return 1;
@@ -64,12 +65,14 @@ int main(int argc, char* argv[])
     for (int fc = 0; 'q' != (char) cv::waitKey(1); ++fc) {
         cout << "a" << endl;
         capture.read(inputImage);
-        cv::Mat outputImage = inputImage.clone();
+        cv::Mat outputImage;
+        scaleImage(inputImage,outputImage);
         int64 startTime = cv::getTickCount();
 
         cout << "B" << endl;
         // Do border detection ...
-        cv::cvtColor(inputImage, src_gray, CV_BGR2GRAY);
+
+        cv::cvtColor(outputImage, src_gray, CV_BGR2GRAY);
         RotatedRect minRect;
         Point2f rectPoints[4]; 
         Mat t_out;
