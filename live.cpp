@@ -19,9 +19,9 @@
 int main(int argc, char* argv[])
 {
     // Simple parsing of the parameters related to the image acquisition
-    int xRes = 640;
-    int yRes = 480;
-    int cameraIndex = 0;
+    int xRes = 1280;
+    int yRes = 720;
+    int cameraIndex = 1;
     if (argc > 2) {
         xRes = std::atoi(argv[1]);
         yRes = std::atoi(argv[2]);
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     // The source of input images
 
     cv::VideoCapture capture;
-    capture.open(0);
+    capture.open(cameraIndex);
     //capture.open("http://10.20.41.200:8080/video?x.mjpeg");
     if (!capture.isOpened()) {
         std::cerr << "Unable to initialise video capture." << std::endl;
