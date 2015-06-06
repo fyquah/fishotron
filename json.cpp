@@ -102,10 +102,31 @@ int main(int argc, char* argv[])
             cerr << rectPoints[2] << endl;
             cerr << rectPoints[3] << endl;
 #endif            
+
+            float l1 = pow(pow((rectPoints[1].x - rectPoints[0].x),2) + pow((rectPoints[1].y - rectPoints[0].y),2),0.5);
+            float l2 = pow(pow((rectPoints[1].x - rectPoints[2].x),2) + pow((rectPoints[1].y - rectPoints[2].y),2),0.5);
+            float len;
+            if (l1 > l2) {len = l1;}
+            else {len = l2;}
+            len=len/50;
+            cv::Scalar col = cv::Scalar(0,180,0);
+            
+            
+            float notdeveloped = 20; //cm
+            float illegal = 10;
+            
+            if (len<notdeveloped) {
+                col = cv::Scalar(0,165,255);
+            }
+            
+            if (len<illegal) {
+                col = cv::Scalar(0,0,255);
+            }
             for (int i = 0 ; i < 4 ; i++) {
-                cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
-                line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], color , 1, 8);
-            }  
+                line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], col , 2, 8);
+            }
+            cv::putText(outputImage, cv::format("%.01f", len), Point2f(50,50),
+                        cv::FONT_HERSHEY_SIMPLEX, 2.0f, col);
 
             if (isRecording) {
                 double a = dst(rectPoints[0], rectPoints[1]);

@@ -33,4 +33,4 @@ headers = { "content-type": "application/json" }
 print requests.post(url= url, data=json.dumps(payload), headers=headers)
 
 # Remove the file
-system.call(["rm", sys.argv[1]])
+subprocess.call(["rm", sys.argv[1]])
