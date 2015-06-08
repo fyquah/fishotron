@@ -23,7 +23,7 @@ string get_rectangle_json(double length, double width);
 string get_point_json(const Point2f & p);
 pair<double, double> compute_length_and_width(const vector<double> & v_length, const vector<double> & v_width);
 double dst(const Point2f & a, const Point2f & b);
-const int PIXEL_RATIO = 50;
+const int PIXEL_RATIO = 29;
 int xRes = 1280;
 int yRes = 720;
 int thresh = 100;
@@ -75,7 +75,7 @@ void callback(Mat image) {
         float len;
         if (l1 > l2) {len = l1;}
         else {len = l2;}
-        len=len/50;
+        len=len/PIXEL_RATIO;
         cv::Scalar col = cv::Scalar(0,180,0);
 
 
@@ -96,22 +96,22 @@ void callback(Mat image) {
                     cv::FONT_HERSHEY_SIMPLEX, 2.0f, Scalar(0, 0, 0));
 
         if (isRecording) {
-            circle(outputImage, Point2f(1000, 70), 35, Scalar(0, 0, 255), 25);
+            circle(outputImage, Point2f(500, 70), 35, Scalar(0, 0, 255), 25);
 
             double a = dst(rectPoints[0], rectPoints[1]);
             double b = dst(rectPoints[1], rectPoints[2]);
             v_length.push_back(max(a, b));
             v_width.push_back(min(a, b));
         }
-
     }  else {
 #ifdef DEBUG
         cerr << "Unable to obtained best rectangle!" << endl;
+        // cv::imshow("DisplayChilitags", outputImage);
 #endif
     }
-
-    // Finally...
+    cv::resize(outputImage, outputImage, Size(0, 0), 1.5, 1.5);
     cv::imshow("DisplayChilitags", outputImage);
+    // Finally...
 
     // handle break conditions
     if (isRecording && v_length.size() >= 20) {

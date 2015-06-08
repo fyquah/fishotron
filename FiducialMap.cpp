@@ -10,8 +10,10 @@ using namespace cv;
 
 
 Point2f getPos(int fidnum,int cornum) {
-	Size fiddist = Size(1235,790); //image size 1135, 690
-	Size fidsize = Size(100,100);
+	//Size fiddist = Size(1235,790); //image size 1135, 690
+	//Size fidsize = Size(100,100);
+	Size fiddist = Size(617,395); //image size 1135, 690
+	Size fidsize = Size(50,50);
 	//taking the lower right of the top left fiducial as (0,0)
 	float fidx = (fidnum==1 || fidnum==2)*fiddist.width;
 	float fidy = (fidnum==2 || fidnum==3)*fiddist.height;
@@ -96,7 +98,7 @@ int scaleImage(Mat input, Mat &output) {
 	Mat trans = getPerspectiveTransform(src_p,dst_p);
 	int myradius=5;
 	
-	warpPerspective(input,output,trans,Size(1135.0f,690.0f));
+	warpPerspective(input,output,trans,Size(567.0f,345.0f));
 	
 	return offset;	
 	
