@@ -3,8 +3,9 @@
 #include <vector>
 #include <math.h>
 #include <unistd.h>
-#include "rectangle.h"
 #include <chilitags/chilitags.hpp>
+#include "rectangle.h"
+#include "camera.h"
 
 #ifdef OPENCV3
 #include <opencv2/core/utility.hpp> // getTickCount...
@@ -17,11 +18,15 @@
 #include <iostream>
 #include "FiducialMap.h"
 
+string image_save_path;
 string get_rectangle_json(double length, double width);
 string get_point_json(const Point2f & p);
 pair<double, double> compute_length_and_width(const vector<double> & v_length, const vector<double> & v_width);
 double dst(const Point2f & a, const Point2f & b);
 const int PIXEL_RATIO = 50;
+int xRes = 1280;
+int yRes = 720;
+int thresh = 100;
 // #define DEBUG 1;
 
 string toString(int x) {
@@ -30,154 +35,127 @@ string toString(int x) {
     return ss.str();
 }
 
-int main(int argc, char* argv[])
-{
-    assert(argc >= 2);
-    // Simple parsing of the parameters related to the image acquisition
-    int xRes = 1280;
-    int yRes = 720;
-    int cameraIndex = 0;
-    string image_save_path = argv[1];
-    RNG rng(12345);
-    int thresh = 100;
-    bool isRecording = false;
-    // The source of input images
-    vector<double> v_length, v_width;
-    cv::VideoCapture capture;
-    capture.open(cameraIndex);
-    //capture.open("http://10.20.41.200:8080/video?x.mjpeg");
-    if (!capture.isOpened()) {
-        std::cerr << "Unable to initialise video capture." << std::endl;
-        return 1;
-    }
-#ifdef OPENCV3
-    capture.set(cv::CAP_PROP_FRAME_WIDTH, xRes);
-    capture.set(cv::CAP_PROP_FRAME_HEIGHT, yRes);
-#else
-    capture.set(CV_CAP_PROP_FRAME_WIDTH, xRes);
-    capture.set(CV_CAP_PROP_FRAME_HEIGHT, yRes);
-#endif
-    cv::Mat inputImage, src_gray;
-
-    // The tag detection happens in the Chilitags class.
-    chilitags::Chilitags chilitags;
-
-    // The detection is not perfect, so if a tag is not detected during one frame,
-    // the tag will shortly disappears, which results in flickering.
-    // To address this, Chilitags "cheats" by keeping tags for n frames
-    // at the same position. When tags disappear for more than 5 frames,
-    // Chilitags actually removes it.
-    // Here, we cancel this to show the raw detection results.
-    chilitags.setFilter(0, 0.0f);
-
-    cv::namedWindow("DisplayChilitags");
-    // Main loop, exiting when 'q is pressed'
-    for (; 'q' != (char) cv::waitKey(1) ; ) {
+void callback(Mat image) {
+    Mat src_gray, outputImage;
+    static vector<double> v_length;
+    static vector<double> v_width;
+    static bool isRecording = false;
+    outputImage = image.clone();
 #ifdef DEBUG
-        cerr << "a" << endl;
+    cerr << "a" << endl;
 #endif
-        capture.read(inputImage);
-        cv::Mat outputImage;
-        scaleImage(inputImage,outputImage);
-        int64 startTime = cv::getTickCount();
+
+    int64 startTime = cv::getTickCount();
 
 #ifdef DEBUG
-        cerr << "B" << endl;
+    cerr << "B" << endl;
 #endif
-        // Do border detection ...
+    // Do border detection ...
 
-        cv::cvtColor(outputImage, src_gray, CV_BGR2GRAY);
-        RotatedRect minRect;
-        Point2f rectPoints[4]; 
-        Mat t_out;
+    cv::cvtColor(image, src_gray, CV_BGR2GRAY);
+    RotatedRect minRect;
+    Point2f rectPoints[4];
+    Mat t_out;
 
 #ifdef DEBUG
         cerr << "c" << endl;
 #endif
-        if(obtainRectangle(src_gray, thresh, minRect, t_out)) {
-            minRect.points(rectPoints);
+    if(obtainRectangle(src_gray, thresh, minRect, t_out)) {
+        minRect.points(rectPoints);
 #ifdef DEBUG
-            cerr << rectPoints[0] << endl;
-            cerr << rectPoints[1] << endl;
-            cerr << rectPoints[2] << endl;
-            cerr << rectPoints[3] << endl;
-#endif            
-
-            float l1 = pow(pow((rectPoints[1].x - rectPoints[0].x),2) + pow((rectPoints[1].y - rectPoints[0].y),2),0.5);
-            float l2 = pow(pow((rectPoints[1].x - rectPoints[2].x),2) + pow((rectPoints[1].y - rectPoints[2].y),2),0.5);
-            float len;
-            if (l1 > l2) {len = l1;}
-            else {len = l2;}
-            len=len/50;
-            cv::Scalar col = cv::Scalar(0,180,0);
-            
-            
-            float notdeveloped = 20; //cm
-            float illegal = 10;
-            
-            if (len<notdeveloped) {
-                col = cv::Scalar(0,165,255);
-            }
-            
-            if (len<illegal) {
-                col = cv::Scalar(0,0,255);
-            }
-            for (int i = 0 ; i < 4 ; i++) {
-                line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], col , 2, 8);
-            }
-            cv::putText(outputImage, cv::format("%.01f", len), Point2f(50,50),
-                        cv::FONT_HERSHEY_SIMPLEX, 2.0f, Scalar(0, 0, 0));
-
-            if (isRecording) {
-                circle(outputImage, Point2f(1000, 70), 35, Scalar(0, 0, 255), 25);   
-
-                double a = dst(rectPoints[0], rectPoints[1]);
-                double b = dst(rectPoints[1], rectPoints[2]);
-                v_length.push_back(max(a, b));
-                v_width.push_back(min(a, b));
-            }
-
-        }  else {
-#ifdef DEBUG
-            cerr << "Unable to obtained best rectangle!" << endl;
+        cerr << rectPoints[0] << endl;
+        cerr << rectPoints[1] << endl;
+        cerr << rectPoints[2] << endl;
+        cerr << rectPoints[3] << endl;
 #endif
+
+        float l1 = pow(pow((rectPoints[1].x - rectPoints[0].x),2) + pow((rectPoints[1].y - rectPoints[0].y),2),0.5);
+        float l2 = pow(pow((rectPoints[1].x - rectPoints[2].x),2) + pow((rectPoints[1].y - rectPoints[2].y),2),0.5);
+        float len;
+        if (l1 > l2) {len = l1;}
+        else {len = l2;}
+        len=len/50;
+        cv::Scalar col = cv::Scalar(0,180,0);
+
+
+        float notdeveloped = 20; //cm
+        float illegal = 10;
+
+        if (len<notdeveloped) {
+            col = cv::Scalar(0,165,255);
         }
 
-        // Finally...
-        cv::imshow("DisplayChilitags", outputImage);
-
-        // handle break conditions
-        if (isRecording && v_length.size() >= 20) {
-            // do forking and break
-            cout << "Finish recording!" << endl;
-            pid_t pid = fork();
-            if (pid == 0) {
-                // children process
-                pair<double, double> p = compute_length_and_width(v_length, v_width);
-                image_save_path =  toString(rand() % 1000) + image_save_path;
-                imwrite(image_save_path.c_str(), inputImage);
-                execl("/usr/bin/python", "python", "push.py", image_save_path.c_str(), toString(p.first).c_str(), toString(p.second).c_str(), (char*) 0);
-                return 0;
-
-            } else if(pid >= 1) {
-                isRecording = false;
-                v_length.clear();
-                v_width.clear();
-            } else if (pid == -1) {
-                // error occued
-                // an error occured!
-            }
-
-        } else if(!isRecording && waitKey(1) == 13) {
-            cout << "Start recording!" << endl;
-            isRecording = true;
-            v_length.clear();
-            v_width.clear();
+        if (len<illegal) {
+            col = cv::Scalar(0,0,255);
         }
+        for (int i = 0 ; i < 4 ; i++) {
+            line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], col , 2, 8);
+        }
+        cv::putText(outputImage, cv::format("%.01f", len), Point2f(50,50),
+                    cv::FONT_HERSHEY_SIMPLEX, 2.0f, Scalar(0, 0, 0));
+
+        if (isRecording) {
+            circle(outputImage, Point2f(1000, 70), 35, Scalar(0, 0, 255), 25);
+
+            double a = dst(rectPoints[0], rectPoints[1]);
+            double b = dst(rectPoints[1], rectPoints[2]);
+            v_length.push_back(max(a, b));
+            v_width.push_back(min(a, b));
+        }
+
+    }  else {
+#ifdef DEBUG
+        cerr << "Unable to obtained best rectangle!" << endl;
+#endif
     }
 
+    // Finally...
+    cv::imshow("DisplayChilitags", outputImage);
+
+    // handle break conditions
+    if (isRecording && v_length.size() >= 20) {
+        // do forking and break
+        cout << "Finish recording!" << endl;
+        pid_t pid = fork();
+        if (pid == 0) {
+            // children process
+            pair<double, double> p = compute_length_and_width(v_length, v_width);
+            image_save_path =  toString(rand() % 1000) + image_save_path;
+            imwrite(image_save_path.c_str(), image);
+            execl("/usr/bin/python", "python", "push.py", image_save_path.c_str(), toString(p.first).c_str(), toString(p.second).c_str(), (char*) 0);
+            exit(0);
+
+        } else if(pid >= 1) {
+            isRecording = false;
+            v_length.clear();
+            v_width.clear();
+        } else if (pid == -1) {
+            // error occued
+            // an error occured!
+        }
+
+    } else if(!isRecording && waitKey(1) == 13) {
+        cout << "Start recording!" << endl;
+        isRecording = true;
+        v_length.clear();
+        v_width.clear();
+    }
+}
+
+int main(int argc, char* argv[]){
+    assert(argc >= 2);
+    // Simple parsing of the parameters related to the image acquisition
+
+    camera::setIpAddress("192.168.2.6:8080");
+    image_save_path = argv[1];
+    RNG rng(12345);
+    int thresh = 100;
+    bool isRecording = false;
+    // The source of input images
+
+    cv::namedWindow("Display");
+    camera::poolCamera(callback);
     cv::destroyWindow("DisplayChilitags");
-    capture.release();
     return 0;
 }
 
