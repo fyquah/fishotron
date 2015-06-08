@@ -56,6 +56,7 @@ void callback(Mat image) {
     RotatedRect minRect;
     Point2f rectPoints[4];
     Mat t_out;
+    scaleImage(image, outputImage);
 
 #ifdef DEBUG
         cerr << "c" << endl;
