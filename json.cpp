@@ -52,11 +52,11 @@ void callback(Mat image) {
 #endif
     // Do border detection ...
 
-    cv::cvtColor(image, src_gray, CV_BGR2GRAY);
+    scaleImage(image, outputImage);
+    cv::cvtColor(outputImage, src_gray, CV_BGR2GRAY);
     RotatedRect minRect;
     Point2f rectPoints[4];
     Mat t_out;
-    scaleImage(image, outputImage);
 
 #ifdef DEBUG
         cerr << "c" << endl;
