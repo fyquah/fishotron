@@ -147,8 +147,8 @@ int main(int argc, char* argv[]){
     assert(argc >= 2);
     // Simple parsing of the parameters related to the image acquisition
 
-    camera::setIpAddress("192.168.2.6:8080");
-    image_save_path = argv[1];
+    camera::setIpAddress(argv[1]);
+    image_save_path = "output.jpeg";
     RNG rng(12345);
     int thresh = 100;
     bool isRecording = false;
