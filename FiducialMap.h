@@ -1,4 +1,10 @@
-#include "opencv2/imgproc/imgproc.hpp"
+#include <iostream>
+#include <tuple>
+#include <opencv2/imgproc/imgproc.hpp>
 
-int scaleImage(cv::Mat input, cv::Mat &output);
-cv::Point2f getPos(int fidnum,int cornum);
+namespace fish {
+
+    std::tuple<bool, float, cv::Mat> scaleImage(const cv::Mat &, cv::Mat &, cv::Size);
+    cv::Point2f getPos(int, int);
+
+}

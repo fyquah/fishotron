@@ -1,24 +1,33 @@
 #ifndef _RECTANGLE
 #define _RECTANGLE
 
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
-#include <queue>
-#include <map>
-#include <utility>
-#include <stdio.h>
-#include <stdlib.h>
+#include <vector>
 
-using namespace cv;
-using namespace std;
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+
+namespace fish {
 
 const unsigned MINIMUM_EDGE_COUNT = 500;
-inline int distSq(const Point a, const Point b);
+static inline int distSq(const cv::Point & a, const cv::Point & b) {
+    float dx = a.x - b.x, dy = a.y - b.y;
+    return dx * dx + dy * dy;
+}
+static inline float distPoints(const cv::Point & a, const cv::Point & b) {
+    return std::sqrt(distSq(a, b));
+}
 
-bool isValidPoint(Point p, const Mat & threshold_output);
-void transverse(Point p, const Mat & threshold_output, vector<Point> & interesting_points);
-void obtainInterestingPoints(const vector<Point> & candidate_points , const Mat & threshold_output, vector<Point> & interesting_points);
-bool obtainRectangle(const Mat & src_gray, int thresh, RotatedRect & minRect, Mat & threshold_output);
+// calculates the minimum bounding rectangle of the object
+bool obtainRectangle(
+        const cv::Mat &, cv::RotatedRect &, int
+);
+
+}
+
+
 
 #endif

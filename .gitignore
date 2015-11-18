@@ -1,4 +1,6 @@
 build/
+CMakeFiles/
+cmake_install.cmake
 **.DS_STORE
 json
 live
