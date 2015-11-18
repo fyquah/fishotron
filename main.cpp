@@ -41,16 +41,6 @@ void callback(cv::Mat image) {
     static std::vector<double> v_width;
     static bool isRecording = false;
     outputImage = image.clone();
-#ifdef DEBUG
-    std::cerr << "a" << std::endl;
-#endif
-
-    int64 startTime = cv::getTickCount();
-
-#ifdef DEBUG
-    std::cerr << "B" << std::endl;
-#endif
-    // Do border detection ...
 
     fish::scaleImage(image, outputImage, cv::Size(640, 480));
     cv::cvtColor(outputImage, src_gray, CV_BGR2GRAY);
@@ -58,9 +48,6 @@ void callback(cv::Mat image) {
     cv::Point2f rectPoints[4];
     cv::Mat t_out;
 
-#ifdef DEBUG
-        std::cerr << "c" << std::endl;
-#endif
     if(fish::obtainRectangle(src_gray, minRect, thresh)) {
         minRect.points(rectPoints);
 #ifdef DEBUG
@@ -78,23 +65,13 @@ void callback(cv::Mat image) {
         len=len/PIXEL_RATIO;
         cv::Scalar col = cv::Scalar(0,180,0);
 
-
-        float notdeveloped = 20; //cm
-        float illegal = 10;
-
-        if (len<notdeveloped) {
-            col = cv::Scalar(0,165,255);
-        }
-
-        if (len<illegal) {
-            col = cv::Scalar(0,0,255);
-        }
         for (int i = 0 ; i < 4 ; i++) {
             line(outputImage, rectPoints[i], rectPoints[(i+1) % 4], col , 2, 8);
         }
         cv::putText(outputImage, cv::format("%.01f", len), cv::Point2f(50,50),
                     cv::FONT_HERSHEY_SIMPLEX, 2.0f, cv::Scalar(0, 0, 0));
 
+        /*
         if (isRecording) {
             cv::circle(outputImage, cv::Point2f(500, 70), 35, cv::Scalar(0, 0, 255), 25);
 
@@ -103,14 +80,13 @@ void callback(cv::Mat image) {
             v_length.push_back(std::max(a, b));
             v_width.push_back(std::min(a, b));
         }
+        */
     }  else {
-#ifdef DEBUG
-        std::cerr << "Unable to obtained best rectangle!" << std::endl;
-        // cv::imshow("DisplayChilitags", outputImage);
-#endif
+
     }
-    cv::resize(outputImage, outputImage, cv::Size(0, 0), 1.5, 1.5);
+
     cv::imshow("DisplayChilitags", outputImage);
+    // cv::resize(outputImage, outputImage, cv::Size(0, 0), 1.5, 1.5);
     // Finally...
 
     // handle break conditions

@@ -45,23 +45,29 @@ static std::vector<cv::Point> obtainInterestingPoints(
     return interesting_points;
 }
 
-
 bool obtainRectangle(const cv::Mat & src_gray, cv::RotatedRect & minRect, int thresh) {
-    cv::Mat threshold_output;
+    cv::Mat threshold_output, blurred;
     // Mat threshold_output;
     std::vector<cv::Point> interesting_points, candidate_points;
 
     /// Detect edges using Threshold
 
-    cv::Canny(src_gray, threshold_output, thresh, thresh*2, 3);
+    cv::blur(src_gray, blurred, cv::Size(3, 3));
+    cv::Canny(blurred, threshold_output, thresh*2, thresh*3, 3);
     // threshold(src_gray, threshold_output, thresh, 255, cv::THRESH_BINARY);
+    // imshow("Threshold output", threshold_output);
 
     // THIS IS A BOTTLE NECK, HOW TO DO THIS IN PARALLEL?
     for (int i = 0 ; i < threshold_output.rows ; i++) {
-        for (int j = 0 ; j < threshold_output.cols ; j++) {
-            if (threshold_output.at<char>(cv::Point(j, i)) >= 0) {
-                candidate_points.push_back(cv::Point(j, i));
+        if (i >= 0.1 * float(threshold_output.rows) && i <= 0.9 * float(threshold_output.rows)) {
+            for (int j = 0 ; j < threshold_output.cols ; j++) {
+                if (j >= 0.1 * float(threshold_output.cols) && 
+                        j <= 0.9 * float(threshold_output.cols) &&
+                        threshold_output.at<uint8_t>(cv::Point(j, i)) > 0) {
+                    candidate_points.push_back(cv::Point(j, i));
+                }
             }
+
         }
     }
 
