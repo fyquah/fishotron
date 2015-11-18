@@ -61,7 +61,7 @@ bool obtainRectangle(const cv::Mat & src_gray, cv::RotatedRect & minRect, int th
     for (int i = 0 ; i < threshold_output.rows ; i++) {
         if (i >= 0.1 * float(threshold_output.rows) && i <= 0.9 * float(threshold_output.rows)) {
             for (int j = 0 ; j < threshold_output.cols ; j++) {
-                if (j >= 0.1 * float(threshold_output.cols) && 
+                if (j >= 0.1 * float(threshold_output.cols) &&
                         j <= 0.9 * float(threshold_output.cols) &&
                         threshold_output.at<uint8_t>(cv::Point(j, i)) > 0) {
                     candidate_points.push_back(cv::Point(j, i));
