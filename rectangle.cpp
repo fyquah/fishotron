@@ -1,13 +1,72 @@
 #include "Rectangle.h"
+#include "FiducialMap.h"
 
 namespace fish {
 
+std::tuple<bool, float> calibrate(cv::Mat m) {
+    float sum = 0.0;
+    bool isScaled;
+    float ppmm;
+    cv::Mat scaled, output, transformation;
+
+    float lo = 0;
+    float hi = 200;
+    std::tie(isScaled, ppmm, transformation) = scaleImage(m, scaled, cv::Size(640, 480));
+    if (!isScaled) return std::make_tuple(false, 100);
+
+    while (hi - lo >= 0.5) {
+        float mid = (lo + hi) / 2;
+        int number_of_edges = 0;
+        cv::Canny(scaled, output, int(mid), 200, 3);
+
+
+        for (int i = 0 ; i < output.rows ; i++) {
+            if (i >= 0.1 * float(output.rows) && i <= 0.9 * float(output.rows)) {
+                for (int j = 0 ; j < output.cols ; j++) {
+                    if (j >= 0.1 * float(output.cols) &&
+                            j <= 0.9 * float(output.cols) &&
+                            output.at<uint8_t>(cv::Point(j, i)) > 0) {
+                        number_of_edges++;
+                    }
+                }
+
+            }
+        }
+        // evaluate the quality of the filter (By counting the number of edges)
+
+
+        std::cout << number_of_edges << std::endl;
+        if (number_of_edges < 10) {
+            hi = mid;
+        } else {
+            lo = mid;
+        }
+    }
+
+    return std::make_tuple(true, lo);
+}
+
 // runs a statistical test on candidate_points to determine which are the "interesting points"
-static std::vector<cv::Point> obtainInterestingPoints(
-        const std::vector<cv::Point> & candidate_points ,
-        const cv::Mat & threshold_output
+static std::vector<cv::Point> obtainSignificantEdges(
+    const cv::Mat & edgeDetectionOutput,
+    const cv::Mat & originalImage
 ) {
-    std::vector<cv::Point> interesting_points;
+    std::vector<cv::Point> candidate_points, interesting_points;
+
+    for (int i = 0 ; i < edgeDetectionOutput.rows ; i++) {
+        if (i >= 0.1 * float(edgeDetectionOutput.rows) && i <= 0.9 * float(edgeDetectionOutput.rows)) {
+            for (int j = 0 ; j < edgeDetectionOutput.cols ; j++) {
+                if (j >= 0.1 * float(edgeDetectionOutput.cols) &&
+                        j <= 0.9 * float(edgeDetectionOutput.cols) &&
+                        edgeDetectionOutput.at<uint8_t>(cv::Point(j, i)) > 0) {
+                    candidate_points.push_back(cv::Point(j, i));
+                }
+            }
+
+        }
+    }
+
+    std::cout << candidate_points.size() << std::endl;
 
     if(!candidate_points.size()) {
         return interesting_points;
@@ -47,37 +106,22 @@ static std::vector<cv::Point> obtainInterestingPoints(
 
 bool obtainRectangle(const cv::Mat & src_gray, cv::RotatedRect & minRect, int thresh) {
     cv::Mat threshold_output, blurred;
-    // Mat threshold_output;
-    std::vector<cv::Point> interesting_points, candidate_points;
+    std::vector<cv::Point> interesting_points;
 
     /// Detect edges using Threshold
 
     cv::blur(src_gray, blurred, cv::Size(3, 3));
-    cv::Canny(blurred, threshold_output, thresh*2, thresh*3, 3);
+    cv::Canny(blurred, threshold_output, 60, 200, 3);
     // threshold(src_gray, threshold_output, thresh, 255, cv::THRESH_BINARY);
-    // imshow("Threshold output", threshold_output);
+    imshow("Threshold output", threshold_output);
 
-    // THIS IS A BOTTLE NECK, HOW TO DO THIS IN PARALLEL?
-    for (int i = 0 ; i < threshold_output.rows ; i++) {
-        if (i >= 0.1 * float(threshold_output.rows) && i <= 0.9 * float(threshold_output.rows)) {
-            for (int j = 0 ; j < threshold_output.cols ; j++) {
-                if (j >= 0.1 * float(threshold_output.cols) &&
-                        j <= 0.9 * float(threshold_output.cols) &&
-                        threshold_output.at<uint8_t>(cv::Point(j, i)) > 0) {
-                    candidate_points.push_back(cv::Point(j, i));
-                }
-            }
-
-        }
-    }
-
-    interesting_points = obtainInterestingPoints(candidate_points, threshold_output);
+    interesting_points = obtainSignificantEdges(threshold_output, blurred);
 
     if (interesting_points.size()) {
         minRect = minAreaRect(interesting_points);
     }
 
-    return candidate_points.size() > MINIMUM_EDGE_COUNT;
+    return interesting_points.size() > MINIMUM_EDGE_COUNT;
 }
 
 // not working yet :(

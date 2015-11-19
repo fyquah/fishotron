@@ -23,8 +23,9 @@ static inline float distPoints(const cv::Point & a, const cv::Point & b) {
 
 // calculates the minimum bounding rectangle of the object
 bool obtainRectangle(
-        const cv::Mat &, cv::RotatedRect &, int
+    const cv::Mat &, cv::RotatedRect &, int
 );
+std::tuple<bool, float> calibrate(cv::Mat);
 
 }
 

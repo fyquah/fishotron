@@ -26,7 +26,6 @@ double dst(const cv::Point2f & a, const cv::Point2f & b);
 const int PIXEL_RATIO = 29;
 int xRes = 1280;
 int yRes = 720;
-int thresh = 100;
 // #define DEBUG 1;
 
 std::string toString(int x) {
@@ -36,6 +35,19 @@ std::string toString(int x) {
 }
 
 void callback(cv::Mat image) {
+    static float thresh = 100.0;
+
+    if (cv::waitKey(1) == 97) {
+        float tmp;
+        bool shouldUpdate;
+        std::cout << "CALIBRATING!" << std::endl;
+        std::tie(shouldUpdate, tmp) = fish::calibrate(image);
+        if (shouldUpdate) {
+            thresh = tmp;
+            std::cout << "New thresh = " << tmp << std::endl;
+        }
+    }
+
     cv::Mat src_gray, outputImage;
     static std::vector<double> v_length;
     static std::vector<double> v_width;
@@ -48,14 +60,8 @@ void callback(cv::Mat image) {
     cv::Point2f rectPoints[4];
     cv::Mat t_out;
 
-    if(fish::obtainRectangle(src_gray, minRect, thresh)) {
+    if(fish::obtainRectangle(outputImage, minRect, thresh)) {
         minRect.points(rectPoints);
-#ifdef DEBUG
-        std::cerr << rectPoints[0] << std::endl;
-        std::cerr << rectPoints[1] << std::endl;
-        std::cerr << rectPoints[2] << std::endl;
-        std::cerr << rectPoints[3] << std::endl;
-#endif
 
         float l1 = pow(pow((rectPoints[1].x - rectPoints[0].x),2) + pow((rectPoints[1].y - rectPoints[0].y),2),0.5);
         float l2 = pow(pow((rectPoints[1].x - rectPoints[2].x),2) + pow((rectPoints[1].y - rectPoints[2].y),2),0.5);
