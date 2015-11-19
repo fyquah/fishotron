@@ -1,3 +1,22 @@
+# The Usefule information
+
+To run
+
+~~bash
+
+mkdir build
+cd build/
+cmake ../
+make
+./main 102.168.0.1:8080
+
+~~
+
+The common files are everything but `camera.cpp`, `camera.h` and `main.cpp`
+
+
+# ORIGINAL README
+
 # Fishotron
 
 This is the source code of [fish-o-tron](http://fishotron.fyquah.me/), built at [Fishackathon](http://fishackathon2015.challengepost.com/) London. This source is used in the length calculation algorithm. For the code of the web-app in the link above, visit [here](https://github.com/fyquah95/fishotron-web).
