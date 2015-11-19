@@ -14,6 +14,7 @@ std::tuple<bool, float> calibrate(cv::Mat m) {
     std::tie(isScaled, ppmm, transformation) = scaleImage(m, scaled, cv::Size(640, 480));
     if (!isScaled) return std::make_tuple(false, 100);
 
+    // binary search for the best possible threshold value
     while (hi - lo >= 0.5) {
         float mid = (lo + hi) / 2;
         int number_of_edges = 0;
@@ -42,6 +43,8 @@ std::tuple<bool, float> calibrate(cv::Mat m) {
             lo = mid;
         }
     }
+
+    // any other possible callibrations?
 
     return std::make_tuple(true, lo);
 }
