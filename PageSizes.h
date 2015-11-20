@@ -25,7 +25,7 @@ typedef enum {
 
 static int pageSizes[][4] ={
         {-1,-1,-1}, //Unknown - Offset 0
-        {150,237,20}, //A4 - Offset 1
+        {144,227,20}, //A4 - Offset 1
         {-1,-1,-1}, //Unknown - Offset 0
         {-1,-1,-1} //Unknown - Offset 0
 };

@@ -36,7 +36,6 @@ std::tuple<bool, float> calibrate(cv::Mat m) {
         // evaluate the quality of the filter (By counting the number of edges)
 
 
-        std::cout << number_of_edges << std::endl;
         if (number_of_edges < 10) {
             hi = mid;
         } else {
@@ -68,8 +67,6 @@ static std::vector<cv::Point> obtainSignificantEdges(
 
         }
     }
-
-    std::cout << candidate_points.size() << std::endl;
 
     if(!candidate_points.size()) {
         return interesting_points;
@@ -114,7 +111,7 @@ bool obtainRectangle(const cv::Mat & src_gray, cv::RotatedRect & minRect, int th
     /// Detect edges using Threshold
 
     cv::blur(src_gray, blurred, cv::Size(3, 3));
-    cv::Canny(blurred, threshold_output, 60, 200, 3);
+    cv::Canny(blurred, threshold_output, thresh, 200, 3);
     // threshold(src_gray, threshold_output, thresh, 255, cv::THRESH_BINARY);
     imshow("Threshold output", threshold_output);
 
@@ -124,7 +121,7 @@ bool obtainRectangle(const cv::Mat & src_gray, cv::RotatedRect & minRect, int th
         minRect = minAreaRect(interesting_points);
     }
 
-    return interesting_points.size() > MINIMUM_EDGE_COUNT;
+    return true;
 }
 
 // not working yet :(

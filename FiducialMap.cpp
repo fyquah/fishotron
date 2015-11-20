@@ -70,12 +70,12 @@ std::tuple<bool, float, cv::Mat> scaleImage(const cv::Mat &input, cv::Mat &outpu
             break;
         }
     }
-    std::cout << "TAGS: " << tagCount << std::endl;
+
     if (tagCount<4) {
         resize(input, output, outputSize);
         return std::make_tuple(false, -1, cv::Mat());
     }
-    std::cout << "TAGS: " << tagCount << std::endl;
+
     //Now we have the tag data, calculate the size of the draw size
     int widthmm = pageSizes[offset][PageWidth];
     int heightmm = pageSizes[offset][PageHeight];
@@ -86,6 +86,7 @@ std::tuple<bool, float, cv::Mat> scaleImage(const cv::Mat &input, cv::Mat &outpu
     outputRatio = float(outputSize.width) / float(outputSize.height);
     cv::Size drawSize;
     bool letterbox = false; //if this is false, it means bars on right and left. If true, bars on top and bottom.
+
     if (paperRatio<(outputRatio*0.98)) {
         //this means that there will be rectangles on the left and right.
         drawSize.height = outputSize.height;

@@ -35,7 +35,8 @@ std::string toString(int x) {
 }
 
 void callback(cv::Mat image) {
-    static float thresh = 100.0;
+    static float thresh = 15.0;
+    // thresh += 2;
 
     if (cv::waitKey(1) == 97) {
         float tmp;
@@ -54,7 +55,11 @@ void callback(cv::Mat image) {
     static bool isRecording = false;
     outputImage = image.clone();
 
-    fish::scaleImage(image, outputImage, cv::Size(640, 480));
+    bool isSuccessful;
+    float ppmm;
+    cv::Mat m;
+
+    std::tie(isSuccessful, ppmm, m) = fish::scaleImage(image, outputImage, cv::Size(640, 480));
     cv::cvtColor(outputImage, src_gray, CV_BGR2GRAY);
     cv::RotatedRect minRect;
     cv::Point2f rectPoints[4];
@@ -65,10 +70,9 @@ void callback(cv::Mat image) {
 
         float l1 = pow(pow((rectPoints[1].x - rectPoints[0].x),2) + pow((rectPoints[1].y - rectPoints[0].y),2),0.5);
         float l2 = pow(pow((rectPoints[1].x - rectPoints[2].x),2) + pow((rectPoints[1].y - rectPoints[2].y),2),0.5);
-        float len;
-        if (l1 > l2) {len = l1;}
-        else {len = l2;}
-        len=len/PIXEL_RATIO;
+        float len = std::max(l1, l2);
+
+        len = len / ppmm / 10;
         cv::Scalar col = cv::Scalar(0,180,0);
 
         for (int i = 0 ; i < 4 ; i++) {
